@@ -5,6 +5,7 @@ import fs, { readdirSync } from 'fs'
 import { readFile } from 'fs/promises'
 import {TurboFactory } from '@ardrive/turbo-sdk'
 import * as dotenv from "dotenv"
+import { finished } from 'stream'
 
 dotenv.config()
 
@@ -194,6 +195,7 @@ for (const d of dirs_to_upload) {
   await upload_sync_registry(folder_sync_registry, key)
 }
 
+console.log("finished uploading the content of all folders at : ", book_dir)
 await con.end();
 
 
