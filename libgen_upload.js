@@ -121,7 +121,6 @@ const ext_to_mime  = {
   "rb": "text/x-ruby"
 };
 
-
 //initalize arweave stuff
 const key = JSON.parse(fs.readFileSync('./keyfile_arweave.json'))
 
@@ -150,8 +149,13 @@ CREATE TABLE IF NOT EXISTS arweave_transactions (
 
 
 
+const folder_sync_registry = await get_sync_registry()
+const all_dirs = getDirectories(book_dir)
+const dirs_to_upload = all_dirs.filter(d => !folder_sync_registry.includes(d))
+console.log("folder already uploaded : ", folder_sync_registry, ", will upload :", dirs_to_upload)
 
-for (const d of getDirectories(book_dir)) {
+
+for (const d of dirs_to_upload) {
   let files_dir = book_dir + '/' + d
 
   const all_filenames = readdirSync(files_dir)
@@ -184,10 +188,10 @@ for (const d of getDirectories(book_dir)) {
     console.log(`${i}/${all_filenames.length}`)
 
   }
-
-  console.log('stopping after first folder')
-
-
+  
+  console.log(` ======= FINISHED UPLOADING CONTENT OF ${d} DIRECTORY ========= `)
+  folder_sync_registry.push(d)
+  await upload_sync_registry(folder_sync_registry, key)
 }
 
 await con.end();
@@ -357,4 +361,102 @@ async function save_as_uploaded(md5, txid, locator, con) {
     return fs.readdirSync(source, { withFileTypes: true })
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name);
+  }
+
+  async function get_sync_registry() {
+    try {
+      // GraphQL query to find the latest registry transaction
+      const query = `{
+        transactions(
+          tags: [
+            {
+              name: "App-Name", 
+              values: ["${app_name}-sync-registry"]
+            },
+            {
+              name: "Category", 
+              values : "${category}"
+            }
+          ],
+          first: 1,
+          sort: HEIGHT_DESC
+        ) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
+      }`;
+
+      console.log(query)
+  
+      // Execute the query
+      const response = await fetch('https://arweave.net/graphql', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query : query })
+      });
+  
+      const result = await response.json();
+  
+      // Check if we found any registry
+      if (!result.data.transactions.edges.length) {
+        console.log('No registry found. Starting with an empty registry.');
+        return [];
+      }
+  
+      // Get the transaction ID of the latest registry
+      const txId = result.data.transactions.edges[0].node.id;
+      console.log(`Found latest registry at transaction: ${txId}`);
+  
+      // Fetch the registry data
+      const registryResponse = await fetch(`https://arweave.net/${txId}`);
+      const registryData = await registryResponse.json();
+  
+      return registryData;
+    } catch (error) {
+      console.error('Error fetching latest registry:', error);
+      throw error;
+    }
+  }
+  
+  async function upload_sync_registry(updatedRegistry, walletJwk) {
+    try {
+      console.log(`Uploading updated registry with ${updatedRegistry.length} folders...`);
+
+      const arweave = Arweave.init({
+        host: 'arweave.net',
+        port: 443,
+        protocol: 'https',
+        timeout : 10000
+      })
+  
+      // Create a transaction with the updated registry
+      const data = JSON.stringify(updatedRegistry);
+      const transaction = await arweave.createTransaction({ 
+        data: data 
+      }, walletJwk);
+  
+      transaction.addTag('Content-Type', 'application/json');
+      transaction.addTag('App-Name', `${app_name}-sync-registry`);
+      transaction.addTag('Unix-Time', String(Math.round(Date.now() / 1000)));
+      transaction.addTag('Registry-Version', String(updatedRegistry.length));
+      transaction.addTag('Category', category);  
+  
+      await arweave.transactions.sign(transaction, walletJwk);
+  
+      const uploader = await arweave.transactions.getUploader(transaction);
+  
+      while (!uploader.isComplete) {
+        await uploader.uploadChunk();
+        console.log(`${uploader.pctComplete}% complete, ${uploader.uploadedChunks}/${uploader.totalChunks}`);
+      }
+  
+      console.log(`Registry uploaded successfully! Transaction ID: ${transaction.id}`);
+      return transaction.id;
+    } catch (error) {
+      console.error('Error uploading updated registry:', error);
+      throw error;
+    }
   }
