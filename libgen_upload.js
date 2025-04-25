@@ -5,7 +5,6 @@ import fs, { readdirSync } from 'fs'
 import { readFile } from 'fs/promises'
 import {TurboFactory } from '@ardrive/turbo-sdk'
 import * as dotenv from "dotenv"
-import { finished } from 'stream'
 
 dotenv.config()
 

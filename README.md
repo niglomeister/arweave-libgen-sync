@@ -39,15 +39,16 @@ node libgen_upload.js
 ```
 
 Before uploading, the programm will check that a given book does not exist on arweave under the same app-name as to avoid paying for duplicates.
-The books that you uploaded or that were found to already exist on the network are written down in a new "arweave_transactions" table in the database to avoid checking the network every time
+The books that you uploaded or that were found to already exist on the network are written down in a new "arweave_transactions" table in the database to avoid checking the network every time.
+
+Additionaly every torrent folder whose content has been uploaded in whole will be added to a registry on chain to help users of the script start from the right place.
 
 ## About
 
 We are trying to upload the whole Libgen (libgen.is) catalog to Arweave so it may be accessible and searchable forever on the permaweb, starting with the fiction section (because it is the smallest).
 
-You can fork this repo and contribute to this effort by connecting a wallet with some $AR or turbo credit and running the script. 
+You can fork this repo and contribute to this effort by connecting a wallet with some $AR or turbo credit and running the script or send $AR or turbo credits at this wallet that i will use to upload more books ( X9CZKCbX_GRxHtnsaa8pCTe-bQRZCIH0aOaIiYBjJg4 ).
 
-The programm will check on different gateways first if a book has already been uploaded before going through with the upload so you wont waste credits on it.
 
 
 
