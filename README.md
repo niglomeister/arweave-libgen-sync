@@ -24,11 +24,6 @@ Go download them there https://libgen.is/fiction/repository_torrent/ and then do
 
 Once you have the content and the metadata, export the keyfile of an arweave wallet with some $AR on it and save it at the top level under the name keyfile_arweave.json
 
-If you want to use the turbo bundler set the "bundler" variable to "turbo" and make sure to top up your turbo credits with the same wallet that you used for the keyfile.
-
-you can topup using the turbo CLI https://github.com/ardriveapp/turbo-sdk?tab=readme-ov-file#cli or directly on their website at https://turbo-topup.com .
-This step is highly recommended as you might suffer from rate limiting uploading to the standard arweave gateways and will pay more per transaction.
-
 
 ### upload
 
@@ -38,16 +33,16 @@ run the program with.
 node libgen_upload.js
 ```
 
-Before uploading, the programm will check that a given book does not exist on arweave under the same app-name as to avoid paying for duplicates.
-The books that you uploaded or that were found to already exist on the network are written down in a new "arweave_transactions" table in the database to avoid checking the network every time.
+Before uploading, the programm will download the sync registry from Arweave to avoid duplicates.
 
-Additionaly every torrent folder whose content has been uploaded in whole will be added to a registry on chain to help users of the script start from the right place.
+Make sure to download the content of a torrent entirely before running the script or the wrong books might get uploaded because of ordering
+
 
 ## About
 
 We are trying to upload the whole Libgen (libgen.is) catalog to Arweave so it may be accessible and searchable forever on the permaweb, starting with the fiction section (because it is the smallest).
 
-You can fork this repo and contribute to this effort by connecting a wallet with some $AR or turbo credit and running the script or send $AR or turbo credits at this wallet that i will use to upload more books ( X9CZKCbX_GRxHtnsaa8pCTe-bQRZCIH0aOaIiYBjJg4 ).
+You can fork this repo and contribute to this effort by connecting a wallet with some $AR and running the script or send $AR or at this wallet that i will use to upload more books ( X9CZKCbX_GRxHtnsaa8pCTe-bQRZCIH0aOaIiYBjJg4 ).
 
 
 
